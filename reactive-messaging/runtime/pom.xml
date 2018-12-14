@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <parent>
+      <artifactId>shamrock-reactive-messaging</artifactId>
+      <groupId>org.jboss.shamrock</groupId>
+      <version>1.0.0.Alpha1-SNAPSHOT</version>
+      <relativePath>../</relativePath>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+
+   <artifactId>shamrock-reactive-messaging-runtime</artifactId>
+   <name>Shamrock - Reactive Messaging - Runtime</name>
+
+   <dependencies>
+      <dependency>
+         <groupId>org.jboss.shamrock</groupId>
+         <artifactId>shamrock-arc-runtime</artifactId>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>io.smallrye.reactive</groupId>
+         <artifactId>smallrye-reactive-messaging-provider</artifactId>
+      </dependency>
+   </dependencies>
+
+   <build>
+      <plugins>
+         <plugin>
+            <artifactId>maven-dependency-plugin</artifactId>
+         </plugin>
+      </plugins>
+   </build>
+
+</project>
