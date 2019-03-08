@@ -19,6 +19,11 @@ package io.quarkus.example.panache;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +36,13 @@ import javax.ws.rs.Path;
 
 import org.junit.jupiter.api.Assertions;
 
+import com.github.fromage.quasi.fibers.Fiber;
+import com.github.fromage.quasi.fibers.FiberAsync;
+import com.github.fromage.quasi.fibers.Suspendable;
+import com.github.fromage.quasi.strands.SuspendableCallable;
+
 import io.quarkus.hibernate.orm.panache.PanacheQuery;
+import io.quarkus.hibernate.orm.panache.Quasi;
 import io.quarkus.panache.common.Page;
 import io.quarkus.panache.common.Parameters;
 import io.quarkus.panache.common.Sort;
@@ -698,5 +709,52 @@ public class TestEndpoint {
             throws NoSuchMethodException, SecurityException {
         Method method = klass.getMethod(name, params);
         Assertions.assertEquals(returnType, method.getReturnType());
+    }
+
+    @Suspendable
+    @Quasi
+    @Path("async")
+    @GET
+    public CompletionStage<String> getAsync() {
+        return fiber(() -> {
+            CompletableFuture<String> cs = CompletableFuture.completedFuture("Stef");
+            return "Hello " + await(cs);
+        });
+    }
+
+    private static <T> CompletionStage<T> fiber(SuspendableCallable<T> c) {
+        CompletableFuture<T> ret = new CompletableFuture<>();
+        Fiber<Void> fiber = new Fiber<Void>(() -> {
+            try {
+                T val = c.run();
+                ret.complete(val);
+            } catch (Throwable t) {
+                ret.completeExceptionally(t);
+            }
+        });
+        fiber.start();
+        return ret;
+    }
+
+    @Suspendable
+    @Quasi
+    private static <T> T await(CompletionStage<T> cs) {
+        try {
+            return new FiberAsync<T, Throwable>() {
+                @Override
+                protected void requestAsync() {
+                    cs.whenComplete((ret, t) -> {
+                        if (t != null)
+                            asyncFailed(t);
+                        else
+                            asyncCompleted(ret);
+                    });
+                }
+            }.run();
+        } catch (RuntimeException t) {
+            throw t;
+        } catch (Throwable t) {
+            throw new RuntimeException(t);
+        }
     }
 }

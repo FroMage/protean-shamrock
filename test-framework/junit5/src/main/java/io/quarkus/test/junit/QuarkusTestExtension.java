@@ -181,7 +181,7 @@ public class QuarkusTestExtension implements BeforeAllCallback, BeforeEachCallba
                                     out.write(cw.toByteArray());
                                 }
                                 shutdownTasks.add(new DeleteRunnable(location));
-                            } catch (IOException ex) {
+                            } catch (Throwable ex) {
                                 ex.printStackTrace();
                             }
                         }
